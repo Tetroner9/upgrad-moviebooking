@@ -40,3 +40,4 @@ app.listen(PORT, () => {
 require("./routes/movie.routes")(app);
 require("./routes/genre.routes")(app);
 require("./routes/artist.routes")(app);
+require("./routes/user.routes")(app);
