@@ -26,13 +26,13 @@ db.mongoose
     process.exit();
   });
 
-// simple route
+// Set the default route for the index or root path
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the movie booking application.' });
+  res.json({ message: 'Welcome to Upgrad Movie booking application development.' });
 });
 
-// set port, listen for requests
-const PORT = process.env.PORT || 8080;
+// Set the port and start the server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
