@@ -1,16 +1,22 @@
 module.exports = app => {
-    const users = require('../controllers/user.controller.js');
+    const users = require("../controllers/user.controller.js");
   
-    var router = require('express').Router();
+    var router = require("express").Router();
   
-    // Sign Up
-    router.post('/auth/signup', users.signUp);
+    // Create a new User
+    router.post("/auth/signup", users.signUp);
   
-    // Login
-    router.post('/auth/login', users.login);
+    // Login a User
+    router.post("/auth/login", users.login);
   
-    // Logout
-    router.post('/auth/logout', users.logout);
+    // Logout a User
+    router.post("/auth/logout", users.logout);
+  
+    // Get Coupon Code
+    router.get("/getCouponCode", users.getCouponCode);
+  
+    // Book Show
+    router.post("/bookShow", users.bookShow);
   
     app.use('/api', router);
   };

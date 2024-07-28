@@ -1,5 +1,7 @@
 const db = require('../models');
 const User = db.users;
+const Coupon = db.coupons;  // Assuming you have a Coupon model defined
+const Booking = db.bookings;  // Assuming you have a Booking model defined
 const { v4: uuidv4 } = require('uuid');
 const TokenGenerator = require('uuid-token-generator');
 const b2a = require('b2a');
@@ -39,43 +41,30 @@ exports.signUp = (req, res) => {
 exports.login = (req, res) => {
   if (!req.body.username || !req.body.password) {
     return res.status(400).send({
-      message: "Username and password can not be empty!"
+      message: "Content can not be empty!"
     });
   }
 
-  User.findOne({ username: req.body.username })
+  User.findOne({
+    username: req.body.username,
+    password: b2a.btoa(req.body.password)
+  })
     .then(user => {
       if (!user) {
         return res.status(404).send({
-          message: "User not found!"
+          message: "User not found."
         });
       }
-
-      if (user.password !== b2a.btoa(req.body.password)) {
-        return res.status(401).send({
-          message: "Invalid password!"
-        });
-      }
-
       user.isLoggedIn = true;
-      user.access_token = tokgen.generate();
-
-      user.save(user)
-        .then(data => {
-          res.send({
-            uuid: data.uuid,
-            access_token: data.access_token
-          });
-        })
-        .catch(err => {
-          res.status(500).send({
-            message: err.message || "Some error occurred while updating the User."
-          });
-        });
+      user.save();
+      res.send({
+        uuid: user.uuid,
+        access_token: user.access_token
+      });
     })
     .catch(err => {
       res.status(500).send({
-        message: err.message || "Some error occurred while logging in."
+        message: err.message || "Error occurred while logging in."
       });
     });
 };
@@ -84,7 +73,7 @@ exports.login = (req, res) => {
 exports.logout = (req, res) => {
   if (!req.body.uuid) {
     return res.status(400).send({
-      message: "UUID can not be empty!"
+      message: "Content can not be empty!"
     });
   }
 
@@ -92,28 +81,51 @@ exports.logout = (req, res) => {
     .then(user => {
       if (!user) {
         return res.status(404).send({
-          message: "User not found!"
+          message: "User not found."
         });
       }
-
       user.isLoggedIn = false;
-      user.access_token = null;
-
-      user.save(user)
-        .then(data => {
-          res.send({
-            message: "User logged out successfully!"
-          });
-        })
-        .catch(err => {
-          res.status(500).send({
-            message: err.message || "Some error occurred while updating the User."
-          });
-        });
+      user.save();
+      res.send({
+        message: "User logged out successfully."
+      });
     })
     .catch(err => {
       res.status(500).send({
-        message: err.message || "Some error occurred while logging out."
+        message: err.message || "Error occurred while logging out."
+      });
+    });
+};
+
+// Get Coupon Code
+exports.getCouponCode = (req, res) => {
+  // Assuming you have logic to get a coupon code for the user
+  const couponCode = "DISCOUNT2024"; // Example static coupon code
+  res.send({ couponCode });
+};
+
+// Book Show
+exports.bookShow = (req, res) => {
+  if (!req.body.userId || !req.body.showId || !req.body.tickets) {
+    return res.status(400).send({
+      message: "Content can not be empty!"
+    });
+  }
+
+  const booking = new Booking({
+    userId: req.body.userId,
+    showId: req.body.showId,
+    tickets: req.body.tickets,
+    bookingId: uuidv4()
+  });
+
+  booking.save()
+    .then(data => {
+      res.send(data);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message || "Some error occurred while booking the show."
       });
     });
 };
