@@ -21,11 +21,13 @@ exports.findAllMovies = (req, res) => {
 exports.findOne = (req, res) => {
   const id = req.params.movieId;
 
-  Movie.findById(id)
+  Movie.findOne({ movieId: id })
     .then(data => {
-      if (!data)
+      if (!data) {
         res.status(404).send({ message: "Not found Movie with id " + id });
-      else res.send(data);
+      } else {
+        res.send(data);
+      }
     })
     .catch(err => {
       res.status(500).send({ message: "Error retrieving Movie with id=" + id });
