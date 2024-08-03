@@ -3,8 +3,8 @@ const Movie = db.movies;
 
 // Find all movies by status
 exports.findAllMovies = (req, res) => {
-  const status = req.query.status;
-  let condition = status ? { status: { $regex: new RegExp(status), $options: "i" } } : {};
+  const status = req.query.published;
+  let condition = status ? { published: { $regex: new RegExp(status), $options: "i" } } : {};
 
   Movie.find(condition)
     .then(data => {

@@ -11,10 +11,10 @@ module.exports = app => {
     router.get('/?status=RELEASED', movies.findAllMovies);
   
     // Retrieve a single movie with id
-    router.get('/:movieId', movies.findOne);
+    router.get('/:movieid', movies.findOne);
   
     // Retrieve shows of a movie with id
-    router.get('/:movieId/shows', movies.findShows);
+    router.get('/:movieid/shows', movies.findShows);
   
     app.use('/api/movies', router);
   };
