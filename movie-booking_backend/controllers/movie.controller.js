@@ -19,9 +19,9 @@ exports.findAllMovies = (req, res) => {
 
 // Find a single movie by ID
 exports.findOne = (req, res) => {
-  const id = req.params.movieId;
+  const id = req.params.movieid;
 
-  Movie.findOne({ movieId: id })
+  Movie.findOne({ movieid: id })
     .then(data => {
       if (!data) {
         res.status(404).send({ message: "Not found Movie with id " + id });
@@ -36,7 +36,7 @@ exports.findOne = (req, res) => {
 
 // Find shows of a specific movie
 exports.findShows = (req, res) => {
-  const id = req.params.movieId;
+  const id = req.params.movieid;
 
   Movie.findById(id)
     .then(data => {
