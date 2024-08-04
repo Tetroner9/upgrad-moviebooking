@@ -15,31 +15,30 @@ import { Link } from 'react-router-dom';
 
 class BookShow extends Component {
     state = {
-            location: "",
-            theatre: "",
-            language: "",
-            showDate: "",
-            tickets: 0,
-            unitPrice: 500,
-            availableTickets: 20,
-            reqLocation: "dispNone",
-            reqTheatre: "dispNone",
-            reqLanguage: "dispNone",
-            reqShowDate: "dispNone",
-            reqTickets: "dispNone",
-            locations: [],
-            languages: [],
-            theatres: [],
-            showDates: [],
-            showTimes: [],
-            originalShows: []
+        location: "",
+        theatre: "",
+        language: "",
+        showDate: "",
+        tickets: 0,
+        unitPrice: 500,
+        availableTickets: 20,
+        reqLocation: "dispNone",
+        reqTheatre: "dispNone",
+        reqLanguage: "dispNone",
+        reqShowDate: "dispNone",
+        reqTickets: "dispNone",
+        locations: [],
+        languages: [],
+        theatres: [],
+        showDates: [],
+        showTimes: [],
+        originalShows: []
     }
-    
+
     componentWillMount() {
-       
         let dataShows = null;
         let xhrShows = new XMLHttpRequest();
-        xhrShows.addEventListener("readystatechange", (function () {
+        xhrShows.addEventListener("readystatechange", () => {
             if (xhrShows.readyState === 4) {
                 debugger;
                 let response = JSON.parse(xhrShows.responseText)[0];
@@ -58,14 +57,14 @@ class BookShow extends Component {
 
                 this.setState({ locations: newLocations })
             }
-        }).bind(this));
+        });
 
         xhrShows.open("GET", this.props.baseUrl + "movies/" + this.props.match.params.id);
         xhrShows.setRequestHeader("Cache-Control", "no-cache");
         xhrShows.send(dataShows);
     }
 
-    locationChangeHandler = ((event) => {
+    locationChangeHandler = (event) => {
         debugger;
         this.setState({ location: event.target.value });
         let newTheatres = [];
@@ -83,9 +82,9 @@ class BookShow extends Component {
         )
 
         this.setState({ theatres: newTheatres });
-    }).bind(this);
+    }
 
-    theatreChangeHandler = ((event) => {
+    theatreChangeHandler = (event) => {
         this.setState({ theatre: event.target.value });
 
         let newLanguages = [];
@@ -102,9 +101,9 @@ class BookShow extends Component {
             ))
         )
         this.setState({ languages: newLanguages });
-    }).bind(this);
+    }
 
-    languageChangeHandler = ((event) => {
+    languageChangeHandler = (event) => {
         this.setState({ language: event.target.value });
 
         let newShowDates = [];
@@ -122,9 +121,9 @@ class BookShow extends Component {
         )
 
         this.setState({ showDates: newShowDates });
-    }).bind(this);
+    }
 
-    showDateChangeHandler = ((event) => {
+    showDateChangeHandler = (event) => {
         this.setState({ showDate: event.target.value });
 
         let unitPrice = 0;
@@ -140,13 +139,13 @@ class BookShow extends Component {
         }
 
         this.setState({ unitPrice: unitPrice, availableTickets: availableTickets });
-    }).bind(this);
+    }
 
-    ticketsChangeHandler = ((event) => {
+    ticketsChangeHandler = (event) => {
         this.setState({ tickets: event.target.value.split(",") });
-    }).bind(this);
+    }
 
-    bookShowButtonHandler = (() => {
+    bookShowButtonHandler = () => {
         this.state.location === "" ? this.setState({ reqLocation: "dispBlock" }) : this.setState({ reqLocation: "dispNone" });
         this.state.theatre === "" ? this.setState({ reqTheatre: "dispBlock" }) : this.setState({ reqTheatre: "dispNone" });
         this.state.language === "" ? this.setState({ reqLanguage: "dispBlock" }) : this.setState({ reqLanguage: "dispNone" });
@@ -159,7 +158,7 @@ class BookShow extends Component {
             pathname: '/confirm/' + this.props.match.params.id,
             bookingSummary: this.state
         })
-    }).bind(this);
+    }
 
     render() {
         return (

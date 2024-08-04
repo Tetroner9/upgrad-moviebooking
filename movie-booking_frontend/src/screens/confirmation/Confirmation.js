@@ -91,27 +91,27 @@ class Confirmation extends Component {
     this.setState({ couponCode: e.target.value });
   }
 
-  couponApplyHandler =( () => {
+  couponApplyHandler = () => {
     console.log(this.state.couponCode);
     let that = this;
     let data = null;
     let xhr = new XMLHttpRequest();
 
     xhr.addEventListener("readystatechange", function () {
-      if (this.readyState === 4) {
-        let currentState = that.state;
-        debugger;
-        var obj = JSON.parse(this.responseText);
-        let discountValue = obj.discountValue;
-        
-        if (discountValue !== undefined && discountValue > 0) {
-          currentState.totalPrice = that.state.originalTotalPrice - ((that.state.originalTotalPrice * discountValue) / 100);
-          that.setState({ currentState });
-        } else {
-          currentState.totalPrice = that.state.originalTotalPrice;
-          that.setState({ currentState });
+        if (this.readyState === 4) {
+            let currentState = that.state;
+            debugger;
+            var obj = JSON.parse(this.responseText);
+            let discountValue = obj.discountValue;
+
+            if (discountValue !== undefined && discountValue > 0) {
+                currentState.totalPrice = that.state.originalTotalPrice - ((that.state.originalTotalPrice * discountValue) / 100);
+                that.setState({ currentState });
+            } else {
+                currentState.totalPrice = that.state.originalTotalPrice;
+                that.setState({ currentState });
+            }
         }
-      }
     });
 
     xhr.open("GET", this.props.baseUrl + "auth/coupons?code=" + this.state.couponCode);
@@ -119,7 +119,8 @@ class Confirmation extends Component {
     xhr.setRequestHeader("Cache-Control", "no-cache");
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.send(data);
-  }).bind(this);
+};
+
 
   render() {
     const { classes } = this.props;
