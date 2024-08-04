@@ -49,7 +49,6 @@ const styles = theme => ({
 });
 
 class Home extends Component {
-
     constructor() {
         super();
         this.state = {
@@ -65,69 +64,65 @@ class Home extends Component {
         }
     }
 
-    componentWillMount() {
-        // Get upcoming movies
-        let data = null;
+    componentDidMount() {
+        this.getMovies("PUBLISHED", "upcomingMovies");
+        this.getMovies("RELEASED", "releasedMovies");
+        this.getGenres();
+        this.getArtists();
+    }
+
+    getMovies = (status, stateField) => {
         let xhr = new XMLHttpRequest();
-        let that = this;
-        xhr.addEventListener("readystatechange", function () {
-          
-            if (this.readyState === 4) {
-                debugger;
-                that.setState({
-                    upcomingMovies: JSON.parse(this.responseText).movies
-                });
+        xhr.addEventListener("readystatechange", () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    this.setState({ [stateField]: response.movies });
+                } catch (error) {
+                    console.error("Failed to parse movies response", error);
+                }
             }
         });
 
-        xhr.open("GET", this.props.baseUrl + "movies?status=PUBLISHED");
+        xhr.open("GET", `${this.props.baseUrl}movies?status=${status}`);
         xhr.setRequestHeader("Cache-Control", "no-cache");
-        xhr.send(data);
+        xhr.send();
+    }
 
-        // Get released movies
-        let dataReleased = null;
-        let xhrReleased = new XMLHttpRequest();
-        xhrReleased.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    releasedMovies: JSON.parse(this.responseText).movies
-                });
+    getGenres = () => {
+        let xhr = new XMLHttpRequest();
+        xhr.addEventListener("readystatechange", () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    this.setState({ genresList: response.genres });
+                } catch (error) {
+                    console.error("Failed to parse genres response", error);
+                }
             }
         });
 
-        xhrReleased.open("GET", this.props.baseUrl + "movies?status=RELEASED");
-        xhrReleased.setRequestHeader("Cache-Control", "no-cache");
-        xhrReleased.send(dataReleased);
+        xhr.open("GET", `${this.props.baseUrl}genres`);
+        xhr.setRequestHeader("Cache-Control", "no-cache");
+        xhr.send();
+    }
 
-        // Get filters
-        let dataGenres = null;
-        let xhrGenres = new XMLHttpRequest();
-        xhrGenres.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    genresList: JSON.parse(this.responseText).genres
-                });
+    getArtists = () => {
+        let xhr = new XMLHttpRequest();
+        xhr.addEventListener("readystatechange", () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    this.setState({ artistsList: response.artists });
+                } catch (error) {
+                    console.error("Failed to parse artists response", error);
+                }
             }
         });
 
-        xhrGenres.open("GET", this.props.baseUrl + "genres");
-        xhrGenres.setRequestHeader("Cache-Control", "no-cache");
-        xhrGenres.send(dataGenres);
-
-        // Get artists
-        let dataArtists = null;
-        let xhrArtists = new XMLHttpRequest();
-        xhrArtists.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    artistsList: JSON.parse(this.responseText).artists
-                });
-            }
-        });
-
-        xhrArtists.open("GET", this.props.baseUrl + "artists");
-        xhrArtists.setRequestHeader("Cache-Control", "no-cache");
-        xhrArtists.send(dataArtists);
+        xhr.open("GET", `${this.props.baseUrl}artists`);
+        xhr.setRequestHeader("Cache-Control", "no-cache");
+        xhr.send();
     }
 
     movieNameChangeHandler = event => {
@@ -151,8 +146,7 @@ class Home extends Component {
     }
 
     movieClickHandler = (id) => {
-        //Changed /movie/id to /movies/id 
-        this.props.history.push('movie/' + id);
+        this.props.history.push('/movie/' + id);
     }
 
     filterApplyHandler = () => {
@@ -173,20 +167,21 @@ class Home extends Component {
             queryString += "&end_date=" + this.state.releaseDateEnd;
         }
 
-        let that = this;
-        let dataFilter = null;
         let xhrFilter = new XMLHttpRequest();
-        xhrFilter.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    releasedMovies: JSON.parse(this.responseText).movies
-                });
+        xhrFilter.addEventListener("readystatechange", () => {
+            if (xhrFilter.readyState === 4 && xhrFilter.status === 200) {
+                try {
+                    const response = JSON.parse(xhrFilter.responseText);
+                    this.setState({ releasedMovies: response.movies });
+                } catch (error) {
+                    console.error("Failed to parse filtered movies response", error);
+                }
             }
         });
 
-        xhrFilter.open("GET", this.props.baseUrl + "movies" + encodeURI(queryString));
+        xhrFilter.open("GET", `${this.props.baseUrl}movies${encodeURI(queryString)}`);
         xhrFilter.setRequestHeader("Cache-Control", "no-cache");
-        xhrFilter.send(dataFilter);
+        xhrFilter.send();
     }
 
     render() {
@@ -199,7 +194,7 @@ class Home extends Component {
                     <span>Upcoming Movies</span>
                 </div>
 
-                <GridList cols={5} className={classes.gridListUpcomingMovies} >
+                <GridList cols={5} className={classes.gridListUpcomingMovies}>
                     {this.state.upcomingMovies.map(movie => (
                         <GridListTile key={"upcoming" + movie._id}>
                             <img src={movie.poster_url} className="movie-poster" alt={movie.title} />
@@ -212,7 +207,7 @@ class Home extends Component {
                     <div className="left">
                         <GridList cellHeight={350} cols={4} className={classes.gridListMain}>
                             {this.state.releasedMovies.map(movie => (
-                                <GridListTile onClick={() => this.movieClickHandler(movie.movieid)} className="released-movie-grid-item" key={"grid" + movie._id}>
+                                <GridListTile onClick={() => this.movieClickHandler(movie._id)} className="released-movie-grid-item" key={"grid" + movie._id}>
                                     <img src={movie.poster_url} className="movie-poster" alt={movie.title} />
                                     <GridListTileBar
                                         title={movie.title}
@@ -295,7 +290,7 @@ class Home extends Component {
                                 </FormControl>
                                 <br /><br />
                                 <FormControl className={classes.formControl}>
-                                    <Button onClick={() => this.filterApplyHandler()} variant="contained" color="primary">
+                                    <Button onClick={this.filterApplyHandler} variant="contained" color="primary">
                                         APPLY
                                     </Button>
                                 </FormControl>
@@ -303,7 +298,7 @@ class Home extends Component {
                         </Card>
                     </div>
                 </div>
-            </div >
+            </div>
         )
     }
 }
