@@ -49,6 +49,7 @@ const styles = theme => ({
 });
 
 class Home extends Component {
+
     constructor() {
         super();
         this.state = {
@@ -64,75 +65,70 @@ class Home extends Component {
         }
     }
 
-    componentDidMount() {
-        if (this.props.baseUrl) {
-            this.getMovies("PUBLISHED", "upcomingMovies");
-            this.getMovies("RELEASED", "releasedMovies");
-            this.getGenres();
-            this.getArtists();
-        } else {
-            console.error("Base URL is not defined");
-        }
-    }
-
-    getMovies = (status, stateField) => {
+    componentWillMount() {
+        // Get upcoming movies
+        let data = null;
         let xhr = new XMLHttpRequest();
-        xhr.addEventListener("readystatechange", () => {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    this.setState({ [stateField]: response.movies || [] });
-                } catch (error) {
-                    console.error("Failed to parse movies response", error);
-                }
+        let that = this;
+        xhr.addEventListener("readystatechange", function () {
+          
+            if (this.readyState === 4) {
+                debugger;
+                that.setState({
+                    upcomingMovies: JSON.parse(this.responseText).movies
+                });
             }
         });
-    
-        xhr.open("GET", `${this.props.baseUrl}movies?status=${status}`);
-        xhr.setRequestHeader("Cache-Control", "no-cache");
-        xhr.send();
-    }
-    
 
-    getGenres = () => {
-        let xhr = new XMLHttpRequest();
-        xhr.addEventListener("readystatechange", () => {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    this.setState({ genresList: response.genres || [] });
-                } catch (error) {
-                    console.error("Failed to parse genres response", error);
-                    this.setState({ genresList: [] }); // Set to empty array on error
-                }
+        xhr.open("GET", this.props.baseUrl + "movies?status=PUBLISHED");
+        xhr.setRequestHeader("Cache-Control", "no-cache");
+        xhr.send(data);
+
+        // Get released movies
+        let dataReleased = null;
+        let xhrReleased = new XMLHttpRequest();
+        xhrReleased.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                that.setState({
+                    releasedMovies: JSON.parse(this.responseText).movies
+                });
             }
         });
-    
-        xhr.open("GET", `${this.props.baseUrl}genres`);
-        xhr.setRequestHeader("Cache-Control", "no-cache");
-        xhr.send();
-    }
-    
 
-    getArtists = () => {
-        let xhr = new XMLHttpRequest();
-        xhr.addEventListener("readystatechange", () => {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    this.setState({ artistsList: response.artists || [] }); // Default to empty array if undefined
-                } catch (error) {
-                    console.error("Failed to parse artists response", error);
-                    this.setState({ artistsList: [] }); // Ensure artistsList is always an array
-                }
+        xhrReleased.open("GET", this.props.baseUrl + "movies?status=RELEASED");
+        xhrReleased.setRequestHeader("Cache-Control", "no-cache");
+        xhrReleased.send(dataReleased);
+
+        // Get filters
+        let dataGenres = null;
+        let xhrGenres = new XMLHttpRequest();
+        xhrGenres.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                that.setState({
+                    genresList: JSON.parse(this.responseText).genres
+                });
             }
         });
-    
-        xhr.open("GET", `${this.props.baseUrl}artists`);
-        xhr.setRequestHeader("Cache-Control", "no-cache");
-        xhr.send();
+
+        xhrGenres.open("GET", this.props.baseUrl + "genres");
+        xhrGenres.setRequestHeader("Cache-Control", "no-cache");
+        xhrGenres.send(dataGenres);
+
+        // Get artists
+        let dataArtists = null;
+        let xhrArtists = new XMLHttpRequest();
+        xhrArtists.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                that.setState({
+                    artistsList: JSON.parse(this.responseText).artists
+                });
+            }
+        });
+
+        xhrArtists.open("GET", this.props.baseUrl + "artists");
+        xhrArtists.setRequestHeader("Cache-Control", "no-cache");
+        xhrArtists.send(dataArtists);
     }
-    
 
     movieNameChangeHandler = event => {
         this.setState({ movieName: event.target.value });
@@ -155,7 +151,8 @@ class Home extends Component {
     }
 
     movieClickHandler = (id) => {
-        this.props.history.push('/movie/' + id);
+        //Changed /movie/id to /movies/id 
+        this.props.history.push('movie/' + id);
     }
 
     filterApplyHandler = () => {
@@ -176,36 +173,33 @@ class Home extends Component {
             queryString += "&end_date=" + this.state.releaseDateEnd;
         }
 
+        let that = this;
+        let dataFilter = null;
         let xhrFilter = new XMLHttpRequest();
-        xhrFilter.addEventListener("readystatechange", () => {
-            if (xhrFilter.readyState === 4 && xhrFilter.status === 200) {
-                try {
-                    const response = JSON.parse(xhrFilter.responseText);
-                    this.setState({ releasedMovies: response.movies });
-                } catch (error) {
-                    console.error("Failed to parse filtered movies response", error);
-                }
+        xhrFilter.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                that.setState({
+                    releasedMovies: JSON.parse(this.responseText).movies
+                });
             }
         });
 
-        xhrFilter.open("GET", `${this.props.baseUrl}movies${encodeURI(queryString)}`);
+        xhrFilter.open("GET", this.props.baseUrl + "movies" + encodeURI(queryString));
         xhrFilter.setRequestHeader("Cache-Control", "no-cache");
-        xhrFilter.send();
+        xhrFilter.send(dataFilter);
     }
 
     render() {
         const { classes } = this.props;
-        const { artistsList = [], genresList = [], genres = [], artists = [] } = this.state; // Default to empty arrays
-    
         return (
             <div>
                 <Header baseUrl={this.props.baseUrl} />
-    
+
                 <div className={classes.upcomingMoviesHeading}>
                     <span>Upcoming Movies</span>
                 </div>
-    
-                <GridList cols={5} className={classes.gridListUpcomingMovies}>
+
+                <GridList cols={5} className={classes.gridListUpcomingMovies} >
                     {this.state.upcomingMovies.map(movie => (
                         <GridListTile key={"upcoming" + movie._id}>
                             <img src={movie.poster_url} className="movie-poster" alt={movie.title} />
@@ -213,12 +207,12 @@ class Home extends Component {
                         </GridListTile>
                     ))}
                 </GridList>
-    
+
                 <div className="flex-container">
                     <div className="left">
                         <GridList cellHeight={350} cols={4} className={classes.gridListMain}>
                             {this.state.releasedMovies.map(movie => (
-                                <GridListTile onClick={() => this.movieClickHandler(movie._id)} className="released-movie-grid-item" key={"grid" + movie._id}>
+                                <GridListTile onClick={() => this.movieClickHandler(movie.movieid)} className="released-movie-grid-item" key={"grid" + movie._id}>
                                     <img src={movie.poster_url} className="movie-poster" alt={movie.title} />
                                     <GridListTileBar
                                         title={movie.title}
@@ -236,48 +230,48 @@ class Home extends Component {
                                         FIND MOVIES BY:
                                     </Typography>
                                 </FormControl>
-    
+
                                 <FormControl className={classes.formControl}>
                                     <InputLabel htmlFor="movieName">Movie Name</InputLabel>
                                     <Input id="movieName" onChange={this.movieNameChangeHandler} />
                                 </FormControl>
-    
+
                                 <FormControl className={classes.formControl}>
                                     <InputLabel htmlFor="select-multiple-checkbox">Genres</InputLabel>
                                     <Select
                                         multiple
                                         input={<Input id="select-multiple-checkbox-genre" />}
                                         renderValue={selected => selected.join(',')}
-                                        value={genres}
+                                        value={this.state.genres}
                                         onChange={this.genreSelectHandler}
                                     >
-                                        {genresList.map(genre => (
+                                        {this.state.genresList.map(genre => (
                                             <MenuItem key={genre.genreid} value={genre.genre}>
-                                                <Checkbox checked={genres.indexOf(genre.genre) > -1} />
+                                                <Checkbox checked={this.state.genres.indexOf(genre.genre) > -1} />
                                                 <ListItemText primary={genre.genre} />
                                             </MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
-    
+
                                 <FormControl className={classes.formControl}>
                                     <InputLabel htmlFor="select-multiple-checkbox">Artists</InputLabel>
                                     <Select
                                         multiple
                                         input={<Input id="select-multiple-checkbox" />}
                                         renderValue={selected => selected.join(',')}
-                                        value={artists}
+                                        value={this.state.artists}
                                         onChange={this.artistSelectHandler}
                                     >
-                                        {artistsList.map(artist => (
+                                        {this.state.artistsList.map(artist => (
                                             <MenuItem key={artist.artistid} value={artist.first_name + " " + artist.last_name}>
-                                                <Checkbox checked={artists.indexOf(artist.first_name + " " + artist.last_name) > -1} />
+                                                <Checkbox checked={this.state.artists.indexOf(artist.first_name + " " + artist.last_name) > -1} />
                                                 <ListItemText primary={artist.first_name + " " + artist.last_name} />
                                             </MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
-    
+
                                 <FormControl className={classes.formControl}>
                                     <TextField
                                         id="releaseDateStart"
@@ -288,7 +282,7 @@ class Home extends Component {
                                         onChange={this.releaseDateStartHandler}
                                     />
                                 </FormControl>
-    
+
                                 <FormControl className={classes.formControl}>
                                     <TextField
                                         id="releaseDateEnd"
@@ -301,7 +295,7 @@ class Home extends Component {
                                 </FormControl>
                                 <br /><br />
                                 <FormControl className={classes.formControl}>
-                                    <Button onClick={this.filterApplyHandler} variant="contained" color="primary">
+                                    <Button onClick={() => this.filterApplyHandler()} variant="contained" color="primary">
                                         APPLY
                                     </Button>
                                 </FormControl>
@@ -309,9 +303,9 @@ class Home extends Component {
                         </Card>
                     </div>
                 </div>
-            </div>
+            </div >
         )
-    }    
+    }
 }
 
 export default withStyles(styles)(Home);

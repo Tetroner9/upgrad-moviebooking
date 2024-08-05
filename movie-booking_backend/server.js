@@ -4,8 +4,7 @@ const cors = require('cors');
 const app = express();
 
 var corsOptions = {
-  origin: 'http://localhost:3000', 
-  optionsSuccessStatus: 200
+  origin: 'http://localhost:3000' // Update this to your frontend port
 };
 
 app.use(cors(corsOptions));
