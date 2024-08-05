@@ -65,10 +65,14 @@ class Home extends Component {
     }
 
     componentDidMount() {
-        this.getMovies("PUBLISHED", "upcomingMovies");
-        this.getMovies("RELEASED", "releasedMovies");
-        this.getGenres();
-        this.getArtists();
+        if (this.props.baseUrl) {
+            this.getMovies("PUBLISHED", "upcomingMovies");
+            this.getMovies("RELEASED", "releasedMovies");
+            this.getGenres();
+            this.getArtists();
+        } else {
+            console.error("Base URL is not defined");
+        }
     }
 
     getMovies = (status, stateField) => {
@@ -77,17 +81,18 @@ class Home extends Component {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    this.setState({ [stateField]: response.movies });
+                    this.setState({ [stateField]: response.movies || [] });
                 } catch (error) {
                     console.error("Failed to parse movies response", error);
                 }
             }
         });
-
+    
         xhr.open("GET", `${this.props.baseUrl}movies?status=${status}`);
         xhr.setRequestHeader("Cache-Control", "no-cache");
         xhr.send();
     }
+    
 
     getGenres = () => {
         let xhr = new XMLHttpRequest();
@@ -95,17 +100,19 @@ class Home extends Component {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    this.setState({ genresList: response.genres });
+                    this.setState({ genresList: response.genres || [] });
                 } catch (error) {
                     console.error("Failed to parse genres response", error);
+                    this.setState({ genresList: [] }); // Set to empty array on error
                 }
             }
         });
-
+    
         xhr.open("GET", `${this.props.baseUrl}genres`);
         xhr.setRequestHeader("Cache-Control", "no-cache");
         xhr.send();
     }
+    
 
     getArtists = () => {
         let xhr = new XMLHttpRequest();
@@ -113,17 +120,19 @@ class Home extends Component {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    this.setState({ artistsList: response.artists });
+                    this.setState({ artistsList: response.artists || [] }); // Default to empty array if undefined
                 } catch (error) {
                     console.error("Failed to parse artists response", error);
+                    this.setState({ artistsList: [] }); // Ensure artistsList is always an array
                 }
             }
         });
-
+    
         xhr.open("GET", `${this.props.baseUrl}artists`);
         xhr.setRequestHeader("Cache-Control", "no-cache");
         xhr.send();
     }
+    
 
     movieNameChangeHandler = event => {
         this.setState({ movieName: event.target.value });
@@ -186,14 +195,16 @@ class Home extends Component {
 
     render() {
         const { classes } = this.props;
+        const { artistsList = [], genresList = [], genres = [], artists = [] } = this.state; // Default to empty arrays
+    
         return (
             <div>
                 <Header baseUrl={this.props.baseUrl} />
-
+    
                 <div className={classes.upcomingMoviesHeading}>
                     <span>Upcoming Movies</span>
                 </div>
-
+    
                 <GridList cols={5} className={classes.gridListUpcomingMovies}>
                     {this.state.upcomingMovies.map(movie => (
                         <GridListTile key={"upcoming" + movie._id}>
@@ -202,7 +213,7 @@ class Home extends Component {
                         </GridListTile>
                     ))}
                 </GridList>
-
+    
                 <div className="flex-container">
                     <div className="left">
                         <GridList cellHeight={350} cols={4} className={classes.gridListMain}>
@@ -225,48 +236,48 @@ class Home extends Component {
                                         FIND MOVIES BY:
                                     </Typography>
                                 </FormControl>
-
+    
                                 <FormControl className={classes.formControl}>
                                     <InputLabel htmlFor="movieName">Movie Name</InputLabel>
                                     <Input id="movieName" onChange={this.movieNameChangeHandler} />
                                 </FormControl>
-
+    
                                 <FormControl className={classes.formControl}>
                                     <InputLabel htmlFor="select-multiple-checkbox">Genres</InputLabel>
                                     <Select
                                         multiple
                                         input={<Input id="select-multiple-checkbox-genre" />}
                                         renderValue={selected => selected.join(',')}
-                                        value={this.state.genres}
+                                        value={genres}
                                         onChange={this.genreSelectHandler}
                                     >
-                                        {this.state.genresList.map(genre => (
+                                        {genresList.map(genre => (
                                             <MenuItem key={genre.genreid} value={genre.genre}>
-                                                <Checkbox checked={this.state.genres.indexOf(genre.genre) > -1} />
+                                                <Checkbox checked={genres.indexOf(genre.genre) > -1} />
                                                 <ListItemText primary={genre.genre} />
                                             </MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
-
+    
                                 <FormControl className={classes.formControl}>
                                     <InputLabel htmlFor="select-multiple-checkbox">Artists</InputLabel>
                                     <Select
                                         multiple
                                         input={<Input id="select-multiple-checkbox" />}
                                         renderValue={selected => selected.join(',')}
-                                        value={this.state.artists}
+                                        value={artists}
                                         onChange={this.artistSelectHandler}
                                     >
-                                        {this.state.artistsList.map(artist => (
+                                        {artistsList.map(artist => (
                                             <MenuItem key={artist.artistid} value={artist.first_name + " " + artist.last_name}>
-                                                <Checkbox checked={this.state.artists.indexOf(artist.first_name + " " + artist.last_name) > -1} />
+                                                <Checkbox checked={artists.indexOf(artist.first_name + " " + artist.last_name) > -1} />
                                                 <ListItemText primary={artist.first_name + " " + artist.last_name} />
                                             </MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
-
+    
                                 <FormControl className={classes.formControl}>
                                     <TextField
                                         id="releaseDateStart"
@@ -277,7 +288,7 @@ class Home extends Component {
                                         onChange={this.releaseDateStartHandler}
                                     />
                                 </FormControl>
-
+    
                                 <FormControl className={classes.formControl}>
                                     <TextField
                                         id="releaseDateEnd"
@@ -300,7 +311,7 @@ class Home extends Component {
                 </div>
             </div>
         )
-    }
+    }    
 }
 
 export default withStyles(styles)(Home);

@@ -94,36 +94,47 @@ class Header extends Component {
     loginClickHandler = () => {
         this.state.username === "" ? this.setState({ usernameRequired: "dispBlock" }) : this.setState({ usernameRequired: "dispNone" });
         this.state.loginPassword === "" ? this.setState({ loginPasswordRequired: "dispBlock" }) : this.setState({ loginPasswordRequired: "dispNone" });
-
+    
+        if (this.state.username === "" || this.state.loginPassword === "") {
+            return;
+        }
+    
         let dataLogin = null;
         let xhrLogin = new XMLHttpRequest();
         let that = this;
         xhrLogin.addEventListener("readystatechange", function () {
             if (this.readyState === 4) {
-                sessionStorage.setItem("uuid", JSON.parse(this.responseText).id);
-                //sessionStorage.setItem("access-token", xhrLogin.getResponseHeader("access-token"));
-
-                if(xhrLogin.getResponseHeader("access-token") == null)
-                {
-                    sessionStorage.setItem("access-token", JSON.parse(this.responseText)["access-token"]);
+                if (xhrLogin.status === 200) {
+                    let response = {};
+                    try {
+                        response = JSON.parse(this.responseText);
+                    } catch (e) {
+                        console.error("Error parsing JSON response:", e);
+                    }
+    
+                    if (response && response.id && xhrLogin.getResponseHeader("access-token")) {
+                        sessionStorage.setItem("uuid", response.id);
+                        sessionStorage.setItem("access-token", xhrLogin.getResponseHeader("access-token"));
+                        that.setState({ loggedIn: true });
+                        that.closeModalHandler();
+                    } else {
+                        // Handle login error - response is not as expected
+                        console.error("Login failed, unexpected response format.");
+                    }
+                } else {
+                    // Handle login error - status code not 200
+                    console.error("Login failed, status code:", xhrLogin.status);
                 }
-                
-            
-                that.setState({
-                    loggedIn: true
-                });
-
-                that.closeModalHandler();
             }
         });
-
-        xhrLogin.open("POST", this.props.baseUrl + "auth/login");
+    
+        xhrLogin.open("POST", `${this.props.baseUrl}auth/login`);
         xhrLogin.setRequestHeader("Authorization", "Basic " + window.btoa(this.state.username + ":" + this.state.loginPassword));
         xhrLogin.setRequestHeader("Content-Type", "application/json");
         xhrLogin.setRequestHeader("Cache-Control", "no-cache");
-       
+    
         xhrLogin.send(dataLogin);
-    }
+    }    
 
     inputUsernameChangeHandler = (e) => {
         this.setState({ username: e.target.value });
