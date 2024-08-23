@@ -49,13 +49,12 @@ const styles = theme => ({
 });
 
 class Home extends Component {
-
     constructor() {
         super();
         this.state = {
             movieName: "",
-            upcomingMovies: [],
-            releasedMovies: [],
+            upcomingMovies: [],  // Initialize as an empty array
+            releasedMovies: [],  // Initialize as an empty array
             genres: [],
             artists: [],
             genresList: [],
@@ -65,69 +64,44 @@ class Home extends Component {
         }
     }
 
-    componentWillMount() {
-        // Get upcoming movies
-        let data = null;
-        let xhr = new XMLHttpRequest();
-        let that = this;
-        xhr.addEventListener("readystatechange", function () {
-          
-            if (this.readyState === 4) {
-                debugger;
-                that.setState({
-                    upcomingMovies: JSON.parse(this.responseText).movies
-                });
+    componentDidMount() {
+        this.fetchMovies("PUBLISHED", "upcomingMovies");
+        this.fetchMovies("RELEASED", "releasedMovies");
+        this.fetchGenres();
+        this.fetchArtists();
+    }
+
+    fetchMovies = (status, stateKey) => {
+        fetch(`${this.props.baseUrl}movies?status=${status}`, {
+            headers: {
+                "Cache-Control": "no-cache"
             }
-        });
+        })
+        .then(response => response.json())
+        .then(data => this.setState({ [stateKey]: data.movies || [] })) // Ensure default empty array
+        .catch(error => console.error('Error fetching movies:', error));
+    }
 
-        xhr.open("GET", this.props.baseUrl + "movies?status=PUBLISHED");
-        xhr.setRequestHeader("Cache-Control", "no-cache");
-        xhr.send(data);
-
-        // Get released movies
-        let dataReleased = null;
-        let xhrReleased = new XMLHttpRequest();
-        xhrReleased.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    releasedMovies: JSON.parse(this.responseText).movies
-                });
+    fetchGenres = () => {
+        fetch(`${this.props.baseUrl}genres`, {
+            headers: {
+                "Cache-Control": "no-cache"
             }
-        });
+        })
+        .then(response => response.json())
+        .then(data => this.setState({ genresList: data.genres || [] })) // Ensure default empty array
+        .catch(error => console.error('Error fetching genres:', error));
+    }
 
-        xhrReleased.open("GET", this.props.baseUrl + "movies?status=RELEASED");
-        xhrReleased.setRequestHeader("Cache-Control", "no-cache");
-        xhrReleased.send(dataReleased);
-
-        // Get filters
-        let dataGenres = null;
-        let xhrGenres = new XMLHttpRequest();
-        xhrGenres.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    genresList: JSON.parse(this.responseText).genres
-                });
+    fetchArtists = () => {
+        fetch(`${this.props.baseUrl}artists`, {
+            headers: {
+                "Cache-Control": "no-cache"
             }
-        });
-
-        xhrGenres.open("GET", this.props.baseUrl + "genres");
-        xhrGenres.setRequestHeader("Cache-Control", "no-cache");
-        xhrGenres.send(dataGenres);
-
-        // Get artists
-        let dataArtists = null;
-        let xhrArtists = new XMLHttpRequest();
-        xhrArtists.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    artistsList: JSON.parse(this.responseText).artists
-                });
-            }
-        });
-
-        xhrArtists.open("GET", this.props.baseUrl + "artists");
-        xhrArtists.setRequestHeader("Cache-Control", "no-cache");
-        xhrArtists.send(dataArtists);
+        })
+        .then(response => response.json())
+        .then(data => this.setState({ artistsList: data.artists || [] })) // Ensure default empty array
+        .catch(error => console.error('Error fetching artists:', error));
     }
 
     movieNameChangeHandler = event => {
@@ -151,7 +125,6 @@ class Home extends Component {
     }
 
     movieClickHandler = (id) => {
-        //Changed /movie/id to /movies/id 
         this.props.history.push('movie/' + id);
     }
 
@@ -173,20 +146,14 @@ class Home extends Component {
             queryString += "&end_date=" + this.state.releaseDateEnd;
         }
 
-        let that = this;
-        let dataFilter = null;
-        let xhrFilter = new XMLHttpRequest();
-        xhrFilter.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                that.setState({
-                    releasedMovies: JSON.parse(this.responseText).movies
-                });
+        fetch(`${this.props.baseUrl}movies${encodeURI(queryString)}`, {
+            headers: {
+                "Cache-Control": "no-cache"
             }
-        });
-
-        xhrFilter.open("GET", this.props.baseUrl + "movies" + encodeURI(queryString));
-        xhrFilter.setRequestHeader("Cache-Control", "no-cache");
-        xhrFilter.send(dataFilter);
+        })
+        .then(response => response.json())
+        .then(data => this.setState({ releasedMovies: data.movies || [] })) // Ensure default empty array
+        .catch(error => console.error('Error applying filter:', error));
     }
 
     render() {
@@ -199,8 +166,8 @@ class Home extends Component {
                     <span>Upcoming Movies</span>
                 </div>
 
-                <GridList cols={5} className={classes.gridListUpcomingMovies} >
-                    {this.state.upcomingMovies.map(movie => (
+                <GridList cols={5} className={classes.gridListUpcomingMovies}>
+                    {Array.isArray(this.state.upcomingMovies) && this.state.upcomingMovies.map(movie => (
                         <GridListTile key={"upcoming" + movie._id}>
                             <img src={movie.poster_url} className="movie-poster" alt={movie.title} />
                             <GridListTileBar title={movie.title} />
@@ -211,7 +178,7 @@ class Home extends Component {
                 <div className="flex-container">
                     <div className="left">
                         <GridList cellHeight={350} cols={4} className={classes.gridListMain}>
-                            {this.state.releasedMovies.map(movie => (
+                            {Array.isArray(this.state.releasedMovies) && this.state.releasedMovies.map(movie => (
                                 <GridListTile onClick={() => this.movieClickHandler(movie.movieid)} className="released-movie-grid-item" key={"grid" + movie._id}>
                                     <img src={movie.poster_url} className="movie-poster" alt={movie.title} />
                                     <GridListTileBar
@@ -277,7 +244,6 @@ class Home extends Component {
                                         id="releaseDateStart"
                                         label="Release Date Start"
                                         type="date"
-                                        defaultValue=""
                                         InputLabelProps={{ shrink: true }}
                                         onChange={this.releaseDateStartHandler}
                                     />
@@ -288,23 +254,20 @@ class Home extends Component {
                                         id="releaseDateEnd"
                                         label="Release Date End"
                                         type="date"
-                                        defaultValue=""
                                         InputLabelProps={{ shrink: true }}
                                         onChange={this.releaseDateEndHandler}
                                     />
                                 </FormControl>
-                                <br /><br />
-                                <FormControl className={classes.formControl}>
-                                    <Button onClick={() => this.filterApplyHandler()} variant="contained" color="primary">
-                                        APPLY
-                                    </Button>
-                                </FormControl>
+
+                                <Button variant="contained" color="primary" onClick={this.filterApplyHandler}>
+                                    Apply Filter
+                                </Button>
                             </CardContent>
                         </Card>
                     </div>
                 </div>
-            </div >
-        )
+            </div>
+        );
     }
 }
 
